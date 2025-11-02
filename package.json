@@ -1,0 +1,30 @@
+{
+  "name": "sre-challenge",
+  "version": "1.0.0",
+  "description": "Desafio SRE - HOUS3 DIGITAL",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pino": "^9.3.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.11.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.7.5",
+    "eslint": "^9.11.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "globals": "^15.9.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
