@@ -1,0 +1,124 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "title": "Payments Overview",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Total de pagamentos criados com sucesso",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["last"] } },
+      "targets": [
+        {
+          "expr": "payments_created_total",
+          "refId": "A"
+        }
+      ],
+      "title": "Pagamentos Criados",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Pagamentos com payload inválido",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["last"] } },
+      "targets": [
+        {
+          "expr": "payments_invalid_payload_total",
+          "refId": "A"
+        }
+      ],
+      "title": "Payload Inválido",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Conflitos de pagamentos (orderId repetido)",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"] } },
+      "targets": [
+        {
+          "expr": "payments_conflict_total",
+          "refId": "A"
+        }
+      ],
+      "title": "Conflitos",
+      "type": "stat"
+    },
+    {
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "title": "HTTP Performance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Latência média das requisições",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "rate(http_server_duration_milliseconds_sum[5m]) / rate(http_server_duration_milliseconds_count[5m])",
+          "refId": "A"
+        }
+      ],
+      "title": "Latência Média HTTP (ms)",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "title": "Node.js Runtime",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 17 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_delay_p99_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "Event Loop Delay (p99)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 17 },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "v8js_memory_heap_used_bytes",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Used (V8)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["sre", "payments", "otel", "node"],
+  "timezone": "",
+  "title": "SRE Challenge Payments Dashboard",
+  "version": 1,
+  "weekStart": ""
+}
