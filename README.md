@@ -1,154 +1,194 @@
-**README – SRE Challenge**
+**SRE Challenge – Hous3**
+
+**Implementação completa de observabilidade utilizando OpenTelemetry, Prometheus, Grafana e Jaeger para instrumentar uma aplicação Node.js com métricas, logs estruturados e traces distribuídos.**
 
 
 
-**Visão Geral**
+**Introdução**
 
-Este projeto consiste em uma API Node.js com foco em observabilidade, criada como parte de um desafio de SRE.
+**Este repositório contém a solução desenvolvida para o desafio de SRE. O objetivo principal foi aplicar práticas modernas de observabilidade na aplicação, utilizando o padrão OpenTelemetry como base para coleta de dados e integrando Prometheus, Grafana e Jaeger para visualização.**
 
-A solução implementa métricas customizadas, métricas automáticas, tracing distribuído, logging estruturado e um stack completo com Prometheus, Grafana, Jaeger e OpenTelemetry Collector.
+
+
+**A aplicação expõe endpoints REST simulando uma API de pagamentos. Toda a geração de métricas, logs e traces é realizada automaticamente por instrumentação configurada no Node SDK do OpenTelemetry.**
 
 
 
 **Arquitetura da Solução**
 
-A API envia métricas e traces para o OpenTelemetry Collector.
-
-O Collector exporta métricas para o Prometheus e traces para o Jaeger.
-
-O Grafana utiliza o Prometheus como datasource para visualização.
+**A solução foi estruturada em quatro componentes principais:**
 
 
 
-**Tecnologias Utilizadas**
+**Aplicação Node.js**
 
-Node.js e Express para a API.
-
-Pino para logging estruturado.
-
-OpenTelemetry SDK para instrumentação.
-
-Prometheus para coleta de métricas.
-
-Jaeger para tracing distribuído.
-
-Grafana para dashboards.
-
-Docker Compose para orquestrar todos os serviços.
+**Responsável por expor os endpoints de pagamentos e emitir métricas e traces através do OpenTelemetry SDK. Inclui instrumentação automática de HTTP, métricas customizadas e logs estruturados.**
 
 
 
-**Estrutura do Projeto**
+**OpenTelemetry Collector**
 
-A estrutura principal contém os arquivos server, tracing, utils e settings dentro da pasta src, além dos arquivos de configuração docker-compose, configuração do OpenTelemetry Collector, arquivo de configuração do Prometheus e este README.
+**Atuação como o ponto central de recebimento e exportação dos dados.**
 
-
-
-**Endpoints Disponíveis**
-
-Endpoint de healthcheck: GET /healthz
-
-Endpoint para listar pedidos com latência simulada: GET /api/v1/orders
-
-Endpoint para buscar pagamento por ID: GET /api/v1/payments/:id
-
-Endpoint para criar pagamento: POST /api/v1/payments com JSON contendo orderId e amount.
+**Recebe OTLP via gRPC e HTTP, processa e encaminha para os serviços de destino, como:**
 
 
 
-Métricas Customizadas
+**• Prometheus (métricas)**
 
-O projeto expõe as seguintes métricas:
-
-• payments\_created\_total: total de pagamentos criados com sucesso
-
-• payments\_conflict\_total: total de pagamentos rejeitados por duplicidade
-
-• payments\_invalid\_payload\_total: total de requisições recebidas com payload inválido
-
-Essas métricas ficam disponíveis no endpoint interno do Prometheus exposto pelo OpenTelemetry Collector.
+**• Jaeger (traces)**
 
 
 
-**Tracing Distribuído**
+**Prometheus**
 
-A API está instrumentada com OpenTelemetry para gerar spans automaticamente para:
+**Coleta as métricas expostas pelo Collector e disponibiliza para consulta.**
 
-• Requisições HTTP
-
-• Rotas Express
-
-• Funções com latência simulada
-
-Os traces podem ser visualizados na interface do Jaeger acessando http://localhost:16686
-
-.
-
-O serviço exibido é identificado como "payments-service".
+**Essa instância é utilizada como fonte de dados principal no Grafana.**
 
 
 
 **Grafana**
 
-O Grafana está disponível em http://localhost:3001
+**Utilizado para visualização das métricas de negócio e de infraestrutura.**
 
-.
-
-Após o login padrão, é necessário configurar o Prometheus como datasource utilizando a URL interna: http://prometheus:9090
-
-.
-
-Um dashboard pode ser importado utilizando o ID 19030 como referência.
+**Foi configurado um dashboard contendo:**
 
 
 
-**Executando o Stack de Observabilidade**
+**• Quantidade de pagamentos criados**
 
-Para iniciar todos os serviços de observabilidade, utilizar o comando docker-compose up -d.
+**• Quantidade de payloads inválidos**
 
-Os serviços iniciam em containers separados: Prometheus, Grafana, Jaeger e OpenTelemetry Collector.
+**• Quantidade de conflitos de ordem**
 
+**• Latência das requisições HTTP**
 
-
-**Executando a API Manualmente**
-
-No Windows PowerShell, definir as variáveis de ambiente OTEL\_SERVICE\_NAME e OTEL\_RESOURCE\_ATTRIBUTES e então executar o servidor utilizando npx tsx src/server.ts.
-
-No Linux ou macOS, o processo é equivalente utilizando export para definir as variáveis de ambiente.
+**• Uso da aplicação durante o teste**
 
 
 
-**Logging Estruturado**
+**Fluxo de Dados**
 
-A aplicação utiliza a biblioteca Pino para registrar logs em formato JSON.
+**• A aplicação registra métricas e traces via OpenTelemetry**
 
-Os logs apresentam informações estruturadas, como detalhes do pagamento processado, incluindo ID, orderId e amount.
+**• O NodeSDK envia tudo para o Collector**
 
+**• O Collector exporta métricas para Prometheus e traces para Jaeger**
 
+**• O Grafana consome Prometheus para montar os dashboards**
 
-**Checklist de Observabilidade**
-
-O projeto implementa todos os pilares essenciais de observabilidade:
-
-• Métricas automáticas
-
-• Métricas customizadas
-
-• Tracing distribuído
-
-• Logging estruturado
-
-• Dashboard no Grafana
-
-• Coleta de dados via Prometheus
-
-• Visualização de spans no Jaeger
-
-• OpenTelemetry Collector configurado e operacional
+**• O Jaeger permite navegar pelos traces de cada requisição**
 
 
 
-**Conclusão**
+**Instrumentações Adicionais**
 
-Esta solução demonstra uma implementação completa dos conceitos fundamentais de observabilidade seguindo boas práticas de SRE. A arquitetura permite acompanhar métricas, analisar performance, monitorar o comportamento da API e rastrear requisições de ponta a ponta, utilizando ferramentas amplamente adotadas por equipes de engenharia de confiabilidade.
+**Além da instrumentação automática, foram adicionadas métricas customizadas relacionadas ao domínio de pagamentos:**
+
+
+
+**• Métrica para pagamentos criados**
+
+**• Métrica para payload inválido**
+
+**• Métrica para pagamentos duplicados**
+
+**• Latência simulada para chamadas**
+
+**• Logs estruturados para cada criação de pagamento**
+
+
+
+**Endereços Padrões Utilizados**
+
+**Jaeger UI em localhost:16686**
+
+**Grafana em localhost:3001**
+
+**Prometheus em localhost:9090**
+
+**Collector OTLP em localhost:4317 e localhost:4318**
+
+
+
+**Execução do Projeto**
+
+
+
+**Inicie os serviços do ambiente**
+
+**O ambiente de observabilidade é iniciado com Docker Compose.**
+
+
+
+**Execute a aplicação**
+
+**A aplicação roda localmente e envia os dados automaticamente ao Collector.**
+
+
+
+**Teste os endpoints**
+
+**Requisições à API geram automaticamente métricas e traces.**
+
+
+
+**Visualize no Grafana e Jaeger**
+
+**O Grafana apresenta todas as métricas de negócio.**
+
+**O Jaeger mostra o fluxo completo de cada chamada, incluindo latência e propagação.**
+
+
+
+**Estrutura Geral do Projeto**
+
+**• src/server.ts**
+
+**• src/utils.ts**
+
+**• src/settings.ts**
+
+**• src/tracing.ts**
+
+**• otel-collector-config.yaml**
+
+**• docker-compose.yml**
+
+**• prometheus.yml**
+
+**• README.md (este arquivo)**
+
+
+
+**Objetivo Atendido**
+
+**A proposta do desafio foi implementada integralmente:**
+
+
+
+**• Instalação e configuração do OpenTelemetry NodeSDK**
+
+**• Instrumentação automática**
+
+**• Configuração do Collector**
+
+**• Exportação de métricas e traces**
+
+**• Dashboard funcional no Grafana**
+
+**• Traces acessíveis no Jaeger**
+
+**• Métricas customizadas de domínio**
+
+**• Logs estruturados**
+
+**• Testes de endpoints para geração de eventos observáveis**
+
+
+
+**Considerações Finais**
+
+**A solução foi construída seguindo as melhores práticas de observabilidade e SRE, garantindo que métricas, logs e traces sejam coletados e exportados de forma padronizada. O projeto demonstra conhecimento prático em OpenTelemetry e na composição de pipelines de observabilidade modernos.**
 
