@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"   # Recebe OTLP gRPC da aplicação
+      - "4318:4318"   # Recebe OTLP HTTP
+      - "8889:8889"   # Exposição de métricas para Prometheus
+    networks:
+      - observability
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"   # UI do Prometheus
+    networks:
+      - observability
+    depends_on:
+      - otel-collector
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # UI do Jaeger
+      - "14250:14250"
+      - "14268:14268"
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"   # Grafana vai abrir em localhost:3001
+    networks:
+      - observability
+    depends_on:
+      - prometheus
+      - jaeger
+
+networks:
+  observability:
+    driver: bridge

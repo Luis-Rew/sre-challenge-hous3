@@ -1,0 +1,37 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  # envia traces para o Jaeger via OTLP (já que COLLECTOR_OTLP_ENABLED=true)
+  otlp:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+
+  # expõe métricas para o Prometheus
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+  # substitui o logging exporter (deprecated)
+  debug:
+    verbosity: detailed
+
+processors:
+  batch:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp, debug]      # antes tinha "jaeger, logging"
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, debug] # antes tinha "prometheus, logging"

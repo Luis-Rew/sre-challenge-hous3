@@ -1,10 +1,30 @@
-import express, { Request, Response } from 'express';
+import "./tracing.js";
+
+import express, { Request, Response, NextFunction } from 'express';
 import pino from 'pino';
+import { metrics } from '@opentelemetry/api';
 
 import { loadConfig } from './settings.js';
 import { simulateLatency } from './utils.js';
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+
+const meter = metrics.getMeter('payments-meter');
+
+const paymentsCreatedCounter = meter.createCounter('payments_created_total', {
+  description: 'Total de pagamentos criados com sucesso',
+});
+
+const paymentsConflictCounter = meter.createCounter('payments_conflict_total', {
+  description: 'Total de pagamentos rejeitados por já existirem',
+});
+
+const paymentsBadRequestCounter = meter.createCounter(
+  'payments_invalid_payload_total',
+  {
+    description: 'Total de requisições com payload inválido em /payments',
+  },
+);
 
 export async function createApp() {
   const app = express();
@@ -38,14 +58,21 @@ export async function createApp() {
     const payload = req.body;
 
     if (!payload?.orderId || !payload?.amount) {
+      paymentsBadRequestCounter.add(1, { route: '/api/v1/payments' });
       res.status(400).json({ message: 'Invalid payload' });
       return;
     }
 
     const payments = await simulateLatency('payments');
-    const existing = payments.find((payment) => payment.orderId === payload.orderId);
+    const existing = payments.find(
+      (payment) => payment.orderId === payload.orderId,
+    );
 
     if (existing) {
+      paymentsConflictCounter.add(1, {
+        route: '/api/v1/payments',
+        orderId: payload.orderId,
+      });
       res.status(409).json({ message: 'Payment already processed' });
       return;
     }
@@ -54,14 +81,21 @@ export async function createApp() {
     const newPayment = { id: `pay_${Date.now()}`, ...payload };
     logger.info({ payment: newPayment }, 'payment processed');
 
+    paymentsCreatedCounter.add(1, {
+      route: '/api/v1/payments',
+      orderId: payload.orderId,
+    });
+
     res.status(201).json({ data: newPayment });
   });
 
-  app.use((err: Error, _req: Request, res: Response) => {
-    logger.error({ err }, 'unhandled error');
-    res.status(500).json({ message: 'Internal server error' });
-  });
- 
+  app.use(
+    (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+      logger.error({ err }, 'unhandled error');
+      res.status(500).json({ message: 'Internal server error' });
+    },
+  );
+
   return { app, config };
 }
 
@@ -73,7 +107,7 @@ async function start() {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.env.NODE_ENV !== 'test') {
   start().catch((err) => {
     logger.error({ err }, 'server failed to start');
     process.exit(1);
@@ -81,4 +115,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 // TODO: Instrumentar com OpenTelemetry (traces, métricas, logs estruturados)
-
